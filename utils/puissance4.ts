@@ -97,6 +97,23 @@ export class Puissance4Game {
         }
     }
 
+    resetGame(): void {
+        this._status = GameStatus.STANDBY;
+        this._board = Array.from({ length: this._board.length }, () => Array(this._boardWidth).fill(0));
+        this._currentPlayer = '';
+        this._winner = '';
+        this._winnerType = WinnerType.NO_WINNER;
+        this._turns = 0;
+    }
+
+    addPlayer(player: string): void {
+        if (this._players.length < 2) {
+            this._players.push(player);
+        } else {
+            throw new Error('Game already has 2 players');
+        }
+    }
+
     private checkWinner(row: number, column: number): boolean {
         const player = this._players.indexOf(this._currentPlayer) + 1;
         return (
