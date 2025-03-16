@@ -14,14 +14,16 @@ export class Puissance4Game {
     private _status: GameStatus = GameStatus.STANDBY;
     private _board: number[][] = [];
     private _players: string[] = [];
+    private _playerNames: { [id: string]: string } = {};
     private _currentPlayer: string = '';
     private _winner: string = '';
     private _winnerType: WinnerType = WinnerType.NO_WINNER;
     private _boardWidth: number = 7;
     private _turns: number = 0;
 
-    constructor(players: string[], boardWidth: number = 7, boardHeight: number = 6) {
+    constructor(players: string[], playerNames: { [id: string]: string }, boardWidth: number = 7, boardHeight: number = 6) {
         this._players = players;
+        this._playerNames = playerNames;
         this._boardWidth = boardWidth;
         this._board = Array.from({ length: boardHeight }, () => Array(boardWidth).fill(0));
     }
@@ -76,13 +78,14 @@ export class Puissance4Game {
             throw new Error('Invalid column');
         }
 
-        const row = this._board.findIndex((row) => row[column] === 0);
+        const row = this._board.slice().reverse().findIndex((row) => row[column] === 0);
         if (row === -1) {
             throw new Error('Column is full');
         }
 
-        this._board[row][column] = this._players.indexOf(this._currentPlayer) + 1;
-        if (this.checkWinner(row, column)) {
+        const actualRow = this._board.length - 1 - row;
+        this._board[actualRow][column] = this._players.indexOf(this._currentPlayer) + 1;
+        if (this.checkWinner(actualRow, column)) {
             this._status = GameStatus.FINISHED;
             this._winner = this._currentPlayer;
             this._winnerType = WinnerType.PLAYER;
@@ -106,9 +109,10 @@ export class Puissance4Game {
         this._turns = 0;
     }
 
-    addPlayer(player: string): void {
+    addPlayer(player: string, playerName: string): void {
         if (this._players.length < 2) {
             this._players.push(player);
+            this._playerNames[player] = playerName;
         } else {
             throw new Error('Game already has 2 players');
         }
@@ -133,14 +137,14 @@ export class Puissance4Game {
         let count = 1;
         let r = row + rowIncrement;
         let c = column + columnIncrement;
-        while (r >= 0 && r < 6 && c >= 0 && c < 7 && this._board[r][c] === player) {
+        while (r >= 0 && r < this._board.length && c >= 0 && c < this._boardWidth && this._board[r][c] === player) {
             count++;
             r += rowIncrement;
             c += columnIncrement;
         }
         r = row - rowIncrement;
         c = column - columnIncrement;
-        while (r >= 0 && r < 6 && c >= 0 && c < 7 && this._board[r][c] === player) {
+        while (r >= 0 && r < this._board.length && c >= 0 && c < this._boardWidth && this._board[r][c] === player) {
             count++;
             r -= rowIncrement;
             c -= columnIncrement;
@@ -160,15 +164,16 @@ export class Puissance4Game {
         return JSON.stringify({
             status: this._status,
             board: this._board,
-            players: this._players,
-            currentPlayer: this._currentPlayer,
-            winner: this._winner,
+            players: this._players.map(player => this._playerNames[player]),
+            currentPlayer: this._playerNames[this._currentPlayer],
+            winner: this._playerNames[this._winner],
             winnerType: this._winnerType,
             turns: this._turns
         });
     }
 
-    isCurrentPlayer(player: string): boolean {
-        return this._currentPlayer === player;
+    isCurrentPlayer(playerId: string): boolean {
+        console.log(this._currentPlayer, playerId);
+        return this._currentPlayer === playerId;
     }
 }
